@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.InputStream;
 
 
 /**
@@ -54,13 +55,13 @@ public class MinioUtil {
     public boolean uploadObject(String bulkName, String objectName, String localFilePathName) {
         try {
             if (!isBuckExist(bulkName)) {
-                System.out.println(bulkName+"不存在");
-               // return false;
+                System.out.println(bulkName + "不存在");
+                // return false;
             }
             File file = new File(localFilePathName);
             if (!file.exists()) {
                 System.out.println("文件不存在");
-               // return false;
+                // return false;
             }
             ObjectWriteResponse objectWriteResponse = minioClient.uploadObject(UploadObjectArgs.builder().bucket(bulkName).object(objectName).filename(localFilePathName).build());
             return true;
@@ -68,7 +69,6 @@ public class MinioUtil {
             log.error("minio upload object file error " + e.getMessage());
             return false;
         }
-
     }
 
     /**
@@ -126,7 +126,6 @@ public class MinioUtil {
      * @return
      */
     public String presignedGetObject(String bucketName, String objectName, Integer expires) {
-
         boolean bucketExists = isBuckExist(bucketName);
         String url = "";
         if (bucketExists) {
@@ -138,10 +137,10 @@ public class MinioUtil {
                         .method(Method.GET)
                         .bucket(bucketName)
                         .object(objectName)
-                        .expiry(expires)
+//                        .expiry(expires)
                         .build();
                 url = minioClient.getPresignedObjectUrl(getPresignedObjectUrlArgs);
-                log.info("*******url:{}", url);
+               // log.info("*******url:{}", url);
             } catch (Exception e) {
                 log.info("presigned get object fail:{}", e);
             }
@@ -149,5 +148,18 @@ public class MinioUtil {
         return url;
     }
 
+    /**
+     * 上传⽂件
+     *
+     * @param bucketName  bucket名称
+     * @param objectName  ⽂件名称
+     * @param stream      ⽂件流
+     * @param size        ⼤⼩
+     * @param contextType 类型
+     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#putObject
+     */
+    public void putObject(String bucketName, String objectName, InputStream stream, long size, String contextType) throws Exception {
+        ObjectWriteResponse objectWriteResponse = minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(stream, size, -1).contentType(contextType).build());
+    }
 }
 

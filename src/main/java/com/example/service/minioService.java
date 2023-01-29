@@ -8,5 +8,5 @@ package com.example.service;
  * @Version: 1.0
  **/
 public interface minioService {
-    String uploadFile();
+    String uploadFile(String BucketName, String ObjectName, String localFilePath, String contextType);
 }
