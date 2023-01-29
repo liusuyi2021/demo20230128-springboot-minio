@@ -26,7 +26,7 @@ public class minioServiceImpl implements minioService {
 
         try {
             FileInputStream inputStream = new FileInputStream(localFilePath);
-            minioUtil.putObject(BucketName, ObjectName, inputStream, inputStream.available(), contextType);
+            minioUtil.uploadObject(BucketName, ObjectName, inputStream, inputStream.available(), contextType);
             return minioUtil.presignedGetObject(BucketName, ObjectName, 5);
         }
         catch (Exception ex)

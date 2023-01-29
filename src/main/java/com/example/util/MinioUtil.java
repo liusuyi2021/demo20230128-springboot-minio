@@ -13,8 +13,6 @@ import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.InputStream;
 
@@ -37,9 +35,17 @@ public class MinioUtil {
      */
     private boolean isBuckExist(String bulkName) {
         try {
-            return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bulkName).build());
+            boolean found  = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bulkName).build());
+            if(found )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         } catch (Exception e) {
-            log.error("bulkname is not exist,error " + e.getMessage());
+            log.error("判断桶是否存在出现异常：" + e.getMessage());
             return false;
         }
     }
@@ -70,7 +76,19 @@ public class MinioUtil {
             return false;
         }
     }
-
+    /**
+     * 上传⽂件-通过文件流
+     *
+     * @param bucketName  bucket名称
+     * @param objectName  ⽂件名称
+     * @param stream      ⽂件流
+     * @param size        ⼤⼩
+     * @param contextType 类型
+     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#putObject
+     */
+    public void uploadObject(String bucketName, String objectName, InputStream stream, long size, String contextType) throws Exception {
+        ObjectWriteResponse objectWriteResponse = minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(stream, size, -1).contentType(contextType).build());
+    }
     /**
      * 下载对象
      *
@@ -115,7 +133,6 @@ public class MinioUtil {
         }
     }
 
-
     /**
      * 生成一个GET请求的分享链接。
      * 失效时间默认是7天。
@@ -146,20 +163,6 @@ public class MinioUtil {
             }
         }
         return url;
-    }
-
-    /**
-     * 上传⽂件
-     *
-     * @param bucketName  bucket名称
-     * @param objectName  ⽂件名称
-     * @param stream      ⽂件流
-     * @param size        ⼤⼩
-     * @param contextType 类型
-     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#putObject
-     */
-    public void putObject(String bucketName, String objectName, InputStream stream, long size, String contextType) throws Exception {
-        ObjectWriteResponse objectWriteResponse = minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(stream, size, -1).contentType(contextType).build());
     }
 }
 
