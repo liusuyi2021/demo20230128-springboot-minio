@@ -8,7 +8,5 @@ package com.example.service;
  * @Version: 1.0
  **/
 public interface minioService {
-    //判断桶是否存在
-   boolean bucketExists();
     String uploadFile();
 }

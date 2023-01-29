@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 
 
 /**
@@ -33,7 +34,7 @@ public class MinioUtil {
      * @param bulkName
      * @return
      */
-    public  boolean isBuckExist(String bulkName) {
+    private boolean isBuckExist(String bulkName) {
         try {
             return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bulkName).build());
         } catch (Exception e) {
@@ -43,25 +44,31 @@ public class MinioUtil {
     }
 
     /**
-     * 上传对象
+     * 上传对象-通过本地路径
      *
      * @param bulkName
      * @param objectName
      * @param localFilePathName
      * @return
      */
-    public  boolean uploadObject(String bulkName, String objectName, String localFilePathName) {
-        if (isBuckExist(bulkName)) {
-            try {
-                minioClient.uploadObject(UploadObjectArgs.builder().bucket(bulkName).object(objectName).filename(localFilePathName).build());
-                return true;
-            } catch (Exception e) {
-                log.error("minio upload object file error " + e.getMessage());
-                return false;
+    public boolean uploadObject(String bulkName, String objectName, String localFilePathName) {
+        try {
+            if (!isBuckExist(bulkName)) {
+                System.out.println(bulkName+"不存在");
+               // return false;
             }
-        } else {
+            File file = new File(localFilePathName);
+            if (!file.exists()) {
+                System.out.println("文件不存在");
+               // return false;
+            }
+            ObjectWriteResponse objectWriteResponse = minioClient.uploadObject(UploadObjectArgs.builder().bucket(bulkName).object(objectName).filename(localFilePathName).build());
+            return true;
+        } catch (Exception e) {
+            log.error("minio upload object file error " + e.getMessage());
             return false;
         }
+
     }
 
     /**
@@ -72,7 +79,7 @@ public class MinioUtil {
      * @param localFilePathName
      * @return
      */
-    public  boolean downloadObject(String bulkName, String objectName, String localFilePathName) {
+    public boolean downloadObject(String bulkName, String objectName, String localFilePathName) {
         if (isBuckExist(bulkName)) {
             try {
                 minioClient.downloadObject(DownloadObjectArgs.builder().bucket(bulkName).object(objectName).filename(localFilePathName).build());
@@ -94,7 +101,7 @@ public class MinioUtil {
      * @param objectName
      * @return
      */
-    public  boolean deleteObject(String bulkName, String objectName) {
+    public boolean deleteObject(String bulkName, String objectName) {
         if (isBuckExist(bulkName)) {
             try {
                 minioClient.removeObject(RemoveObjectArgs.builder().bucket(bulkName).object(objectName).build());
@@ -108,31 +115,7 @@ public class MinioUtil {
         }
     }
 
-    /**
-     * 上传文件
-     * 返回可以直接预览文件的URL
-     */
-    public  String uploadFile(String bucketName,MultipartFile file) {
-        try {
-            //如果存储桶不存在则创建
-            if (!isBuckExist(bucketName)) {
-               // createBucket(bulkName);
-                System.out.println("桶不存在");
-            }
-            PutObjectArgs objectArgs = PutObjectArgs.builder().object(file.getOriginalFilename())
-                    .bucket(bucketName)
-                    .contentType(file.getContentType())
-                    .stream(file.getInputStream(), file.getSize(), -1).build();
 
-            ObjectWriteResponse objectWriteResponse = minioClient.putObject(objectArgs);
-            System.out.println(objectWriteResponse.etag());
-            return "";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
     /**
      * 生成一个GET请求的分享链接。
      * 失效时间默认是7天。
@@ -142,13 +125,13 @@ public class MinioUtil {
      * @param expires    失效时间（以秒为单位），默认是7天，不得大于七天
      * @return
      */
-    public  String presignedGetObject(String bucketName, String objectName, Integer expires) {
+    public String presignedGetObject(String bucketName, String objectName, Integer expires) {
 
         boolean bucketExists = isBuckExist(bucketName);
         String url = "";
         if (bucketExists) {
             try {
-                if (expires == null){
+                if (expires == null) {
                     expires = 604800;
                 }
                 GetPresignedObjectUrlArgs getPresignedObjectUrlArgs = GetPresignedObjectUrlArgs.builder()
@@ -158,9 +141,9 @@ public class MinioUtil {
                         .expiry(expires)
                         .build();
                 url = minioClient.getPresignedObjectUrl(getPresignedObjectUrlArgs);
-                log.info("*******url:{}",url);
+                log.info("*******url:{}", url);
             } catch (Exception e) {
-                log.info("presigned get object fail:{}",e);
+                log.info("presigned get object fail:{}", e);
             }
         }
         return url;

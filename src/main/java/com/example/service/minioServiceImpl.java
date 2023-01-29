@@ -19,19 +19,8 @@ public class minioServiceImpl implements minioService {
     private MinioUtil minioUtil;
 
     @Override
-    public boolean bucketExists() {
-        boolean found = minioUtil.isBuckExist("pic");
-        if (found) {
-            System.out.println("pic exists");
-        } else {
-            System.out.println("pic does not exist");
-        }
-        return found;
-    }
-
-    @Override
     public String uploadFile() {
-        minioUtil.uploadObject("record", "1674878800020(0).mp4", "D:\\record\\1674878800020(0).mp4");
-        return minioUtil.presignedGetObject("record", "1674878800020(0).mp4", 7);
+        boolean upSuccess = minioUtil.uploadObject("record", "1674878800020(1).mp4", "D:\\record\\1674878800020(0).mp4");
+        return minioUtil.presignedGetObject("record", "1674878800020(1).mp4", 7);
     }
 }
